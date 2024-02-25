@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Tracker</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h2 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"], input[type="number"] {
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Add Food</h2>
+        <form id="addFoodForm">
+            <input type="text" id="userId" placeholder="User ID" required>
+            <input type="text" id="foodName" placeholder="Food Name" required>
+            <input type="number" id="calories" placeholder="Calories" required>
+            <button type="submit">Add Food</button>
+        </form>
+        <h2>Total Calories</h2>
+        <div id="totalCalories"></div>
+        <h2>Foods</h2>
+        <ul id="foodList"></ul>
+    </div>
+
+    <script>
+        // JavaScript code
+        document.getElementById('addFoodForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const foodName = document.getElementById('foodName').value;
+            const calories = document.getElementById('calories').value;
+
+            fetch('http://127.0.0.1:5000/add_food', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    food_name: foodName,
+                    calories: parseInt(calories)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById('userId').value = '';
+                document.getElementById('foodName').value = '';
+                document.getElementById('calories').value = '';
+            })
+            .catch(error => console.error('Error:', error));
+
+            setTimeout(() => {getTotalCalories('10');
+            getFoods('10'); }, 1000);
+        });
+
+        // Fetch total calories for a user
+        function getTotalCalories(userId) {
+            fetch('http://127.0.0.1:5000/get_total_calories/' + userId)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalCalories').innerHTML = 'Total Calories: ' + data.total_calories;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Fetch foods for a user
+        function getFoods(userId) {
+            fetch('http://127.0.0.1:5000/get_foods/' + userId)
+            .then(response => response.json())
+            .then(data => {
+                const foodList = document.getElementById('foodList');
+                foodList.innerHTML = '';
+                data.foods.forEach(food => {
+                    const li = document.createElement('li');
+                    li.textContent = food.food_name + ' - ' + food.calories + ' calories';
+                    foodList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Example usage
+        window.onload = function() {
+            // Assuming userId is known
+            const userId = '10';
+            getTotalCalories(userId);
+            getFoods(userId);
+        };
+    </script>
+</body>
+</html>
